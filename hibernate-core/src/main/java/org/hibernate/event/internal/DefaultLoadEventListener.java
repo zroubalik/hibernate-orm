@@ -287,7 +287,11 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		Object impl = null;
 		if ( !options.isAllowProxyCreation() ) {
 			impl = load( event, persister, keyToLoad, options );
-			if ( impl == null ) {
+			// HHH-7861 em.find() shouldn't throw EntityNotFoundException,
+			// it should return null, if entity is not found
+			if ( impl == null && options.isAllowNulls() ) {
+				return null;
+			} else if( impl == null ) {
 				event.getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier());
 			}
 		}
